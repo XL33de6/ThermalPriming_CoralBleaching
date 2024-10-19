@@ -1,5 +1,5 @@
 # Thermal Priming and Marine Heatwave on Coral Bleaching
-This repository deposits Matlab and R codes used in the study "The Loss of Beneficial Thermal Priming on Global Coral Reefs"
+The repository deposits Matlab and R codes used in the study "The Loss of Beneficial Thermal Priming on Global Coral Reefs"
 
 The coral bleaching database ('CBdbV2') is available at https://zenodo.org/records/6780843
 

@@ -1,0 +1,527 @@
+% calculate the changes in #the priming frequency/# moderate MHW in the latter 18-year
+% period (2003-2020) than the earlier 18-year period (year 1985-2002)
+% Author: Xinru Li; Date: Feb. 2024
+% source of figure 7 and Figure S9
+
+clear
+
+% load data
+Dp_2856=ncread('/Volumes/Seagate/backup_lab PC/xinru/RC3/dynamics/priming_metrics_c749_HSY8619_DHD2856.nc','Dtrc');
+Dp_56=ncread('/Volumes/Seagate/backup_lab PC/xinru/RC3/dynamics/priming_metrics_c749_HSY8619_DHD56.nc','Dtrc');   %D/xinru/
+HS_coor = ncread('/Volumes/Seagate/Backup_Copy/RC3/coraltemp_MMM_Hotspots for coral grids/HS_1994_MMMct5km_cc_nmc.nc','coor_cc');  %F:/RC3/coraltemp_MMM_Hotspots for coral grids/
+DHD = ncread('/Users/lixinru/Desktop/PhD.UBC/RC3_predicitng coral bleaching with MHW characteristics/coraltemp_MMM_Hotspots for coral grids/DHD_MMMct5km_cc.nc','DHD_hsy');
+
+
+%% 3D
+% transform 2d data to 3d
+Lat = ncread('/Volumes/Seagate/backup_lab PC/backup F drive 20211231/RC3_coraltemp_MMM_Hotspots for coral grids/ct5km_HS_v3.1_1985.nc','lat',[1101],[1400]);  % 35S-35N  F:/RC3/coraltemp_MMM_Hotspots for coral grids/
+Long = ncread('/Volumes/Seagate/backup_lab PC/backup F drive 20211231/RC3_coraltemp_MMM_Hotspots for coral grids/ct5km_HS_v3.1_1985.nc','lon');
+
+mk=ncread('/Volumes/Seagate/backup_lab PC/backup F drive 20211231/RC3_coraltemp_MMM_Hotspots for coral grids/ct5km_HS_v3.1_1985.nc','mask',[1, 1101, 1],[7200, 1400, 1]); % add the land mask
+
+mk(mk==1)=NaN;  % defind land points as NaN??
+Dp_LL = mk; % [W-E,N-S]
+Dp_LL(~isnan(Dp_LL))=0;
+
+
+Dp_2856_3d=zeros(7200,1400,34);
+Dp_56_3d=zeros(7200,1400,34);
+DHD_3d=zeros(7200,1400,34);
+for y=1:34
+      Dp_2856_3d(:,:,y)=Dp_LL;
+      Dp_56_3d(:,:,y)=Dp_LL;
+      DHD_3d(:,:,y)=Dp_LL;
+end
+
+
+nc=size(Dp_56,1);
+
+for y=1:34
+  for n=1:nc  
+    if (Dp_2856(n,y)>0)
+          p_lat=0;
+      for lat=1:1400
+        if (HS_coor(n,1)==Lat(lat) )
+             p_lat=lat;
+        end
+      end
+          p_lon=0;
+      for lon=1:7200
+        if (HS_coor(n,2)==Long(lon))
+             p_lon=lon;
+        end
+      end
+      if (p_lat~=0 && p_lon~=0)
+           Dp_2856_3d(p_lon,p_lat,y)=Dp_2856(n,y);
+      end
+    end
+  end
+end
+
+
+nc=size(Dp_56,1);
+
+for y=1:34
+  for n=1:nc
+    if (Dp_56(n,y)>0)
+          p_lat=0;
+      for lat=1:1400
+        if (HS_coor(n,1)==Lat(lat) )
+             p_lat=lat;
+        end
+      end
+          p_lon=0;
+      for lon=1:7200
+        if (HS_coor(n,2)==Long(lon))
+             p_lon=lon;
+        end
+      end
+      if (p_lat~=0 && p_lon~=0)
+           Dp_56_3d(p_lon,p_lat,y)=Dp_56(n,y);
+      end
+    end
+  end
+end
+
+
+for y=1:34
+  for n=1:nc
+    if (DHD(n,y)~=0)
+         p_lat=0;
+      for lat=1:1400
+        if (HS_coor(n,1)==Lat(lat) )
+             p_lat=lat;
+        end
+      end
+          p_lon=0;
+      for lon=1:7200
+        if (HS_coor(n,2)==Long(lon))
+             p_lon=lon;
+        end
+      end
+      if (p_lat~=0 && p_lon~=0)
+           DHD_3d(p_lon,p_lat,y)=DHD(n,y);
+      end
+    end
+  end
+end
+
+%toc  %300s
+
+
+%%
+tic
+
+% calculate the #priming occurrence during earlier and latter period
+fp_2856_e=zeros(7200,1400);  % the early 18-year period: 
+fp_2856_l=zeros(7200,1400);  % the late 18-year period: 
+
+for lat=1:1400
+  for lon=1:7200
+    if (~isnan(Dp_2856_3d(lon,lat,1)))
+         n_e=0;
+         n_l=0;
+      for y=1:17
+        if (Dp_2856_3d(lon,lat,y)>0)  % 1986-2001
+              n_e=n_e+1;
+        end
+      end
+         fp_2856_e(lon,lat)=n_e;
+         
+      for y=18:34
+        if (Dp_2856_3d(lon,lat,y)>0)  % 1986-2001
+              n_l=n_l+1;
+        end
+      end
+         fp_2856_l(lon,lat)=n_l;
+    else
+         fp_2856_e(lon,lat)=NaN;
+         fp_2856_l(lon,lat)=NaN;        
+    end
+  end 
+end
+
+% calculate the #priming occurrence during earlier and latter period
+fp_56_e=zeros(7200,1400);  % the early 18-year period: 
+fp_56_l=zeros(7200,1400);  % the late 18-year period: 
+
+for lat=1:1400
+  for lon=1:7200
+    if (~isnan(Dp_56_3d(lon,lat,1)))
+         n_e=0;
+         n_l=0;
+      for y=1:17
+        if (Dp_56_3d(lon,lat,y)>0)  % 1986-2001
+              n_e=n_e+1;
+        end
+      end
+         fp_56_e(lon,lat)=n_e;
+         
+      for y=18:34
+        if (Dp_56_3d(lon,lat,y)>0)  % 1986-2001
+              n_l=n_l+1;
+        end
+      end
+         fp_56_l(lon,lat)=n_l;
+    else
+         fp_56_e(lon,lat)=NaN;
+         fp_56_l(lon,lat)=NaN;        
+    end
+  end 
+end
+
+
+% calculate the #moderate MHW during earlier and latter period
+fmmhw_2856_e=zeros(7200,1400);  % the early 18-year period: 
+fmmhw_2856_l=zeros(7200,1400);  % the late 18-year period: 
+
+for lat=1:1400
+  for lon=1:7200
+       n_e=0;
+       n_l=0;
+    if (~isnan(Dp_2856_3d(lon,lat,1)))
+      for y=1:17
+        if (DHD_3d(lon,lat,y)>=28 && DHD_3d(lon,lat,y)<56)  % 1986-2001 && DHD(n,y)<56
+             n_e=n_e+1;
+        end
+      end
+         fmmhw_2856_e(lon,lat)=n_e;
+         
+      for y=18:34
+        if (DHD_3d(lon,lat,y)>=28 && DHD_3d(lon,lat,y)<56)  % 1986-2001 && DHD(n,y)<56
+             n_l=n_l+1;
+        end
+      end
+           fmmhw_2856_l(lon,lat)=n_l;
+    else
+         fmmhw_2856_e(lon,lat)=NaN;
+         fmmhw_2856_l(lon,lat)=NaN;        
+    end
+  end 
+end
+
+% calculate the #moderate MHW during earlier and latter period
+fmmhw_56_e=zeros(7200,1400);  % the early 18-year period: 
+fmmhw_56_l=zeros(7200,1400);  % the late 18-year period: 
+
+for lat=1:1400
+  for lon=1:7200
+       n_e=0;
+       n_l=0;
+    if (~isnan(Dp_2856_3d(lon,lat,1)))
+      for y=1:17
+        if (DHD_3d(lon,lat,y)>=56)  % 1986-2001 && DHD(n,y)<56
+             n_e=n_e+1;
+        end
+      end
+         fmmhw_56_e(lon,lat)=n_e;
+         
+      for y=18:34
+        if (DHD_3d(lon,lat,y)>=56)  % 1986-2001 && DHD(n,y)<56
+             n_l=n_l+1;
+        end
+      end
+           fmmhw_56_l(lon,lat)=n_l;
+    else
+         fmmhw_56_e(lon,lat)=NaN;
+         fmmhw_56_l(lon,lat)=NaN;        
+    end
+  end 
+end
+
+toc  %4.5s
+
+
+
+
+%%
+% calculate the difference in the priming frequency relative to MHW prequency between two periods
+diff_2856 = mk; % [W-E,N-S]
+diff_2856(~isnan(diff_2856))=0;
+rat_2856_l=zeros(7200,1400);
+rat_2856_e=zeros(7200,1400);
+
+for lat=1:1400
+  for lon=1:7200
+    if (~isnan(fp_2856_l(lon,lat))) 
+      if (fmmhw_2856_e(lon,lat)~=0 && fmmhw_2856_l(lon,lat)~=0);
+           rat_2856_l(lon,lat)=fp_2856_l(lon,lat)/fmmhw_2856_l(lon,lat);
+           rat_2856_e(lon,lat)=fp_2856_e(lon,lat)/fmmhw_2856_e(lon,lat);
+           diff_2856(lon,lat)=rat_2856_l(lon,lat)-rat_2856_e(lon,lat);
+      end
+    end
+  end
+end
+
+diff_56 = mk; % [W-E,N-S]
+diff_56(~isnan(diff_56))=0;
+rat_56_l=zeros(7200,1400);
+rat_56_e=zeros(7200,1400);
+
+for lat=1:1400
+  for lon=1:7200
+    if (~isnan(fp_56_l(lon,lat))) 
+      if (fmmhw_56_e(lon,lat)~=0 && fmmhw_56_l(lon,lat)~=0);
+           rat_56_l(lon,lat)=fp_56_l(lon,lat)/fmmhw_56_l(lon,lat);
+           rat_56_e(lon,lat)=fp_56_e(lon,lat)/fmmhw_56_e(lon,lat);
+           diff_56(lon,lat)=rat_56_l(lon,lat)-rat_56_e(lon,lat);
+      end
+    end
+  end
+end
+
+%%
+% Write netCDF file
+%-------------------------------------------------------------------
+% slope of annual mean sst change computed with the simple linear regression
+%-------------------------------------------------------------------
+
+ncnc= netcdf.create('/Users/lixinru/Desktop/PhD.UBC/RC3_predicitng coral bleaching with MHW characteristics/RC3/dynamics/diff_NprimingNmmhw_35S35N_DHD2856.nc','NC_WRITE');
+
+
+latID=netcdf.defDim(ncnc,'latitude',1400);
+vltID=netcdf.defVar(ncnc,'latitude','float',latID);
+netcdf.putAtt(ncnc,vltID,'axis','Y');
+long_namet = 'latitude';
+netcdf.putAtt(ncnc,vltID,'long_name',long_namet);
+netcdf.putAtt(ncnc,vltID,'units','degrees');
+
+longID=netcdf.defDim(ncnc,'longitude',7200);
+vlgID=netcdf.defVar(ncnc,'longitude','float',longID);
+netcdf.putAtt(ncnc,vlgID,'axis','X');
+long_namet = 'longitude';
+netcdf.putAtt(ncnc,vlgID,'long_name',long_namet);
+netcdf.putAtt(ncnc,vlgID,'units','degrees');
+
+varname = 'diff_freq_c749';
+long_name = 'the changes in the perentage of the number of priming occurrences out of the number of moderate MHW occurrences in the latter 18-year period (2003-2020) than the earlier 18-year period (year 1985-2002)';
+unit = '1';
+
+vmmmID=netcdf.defVar(ncnc,varname,'float',[longID,latID]); % we need to define axis of the field
+netcdf.putAtt(ncnc,vmmmID,'long_name',long_name); % Give it the long_name
+netcdf.putAtt(ncnc,vmmmID,'units',unit);          % The unit
+
+
+% end define mode
+netcdf.endDef(ncnc)
+% input data
+netcdf.putVar(ncnc,vmmmID,diff_2856);
+netcdf.putVar(ncnc,vltID,Lat);
+netcdf.putVar(ncnc,vlgID,Long);
+netcdf.close(ncnc)
+
+
+
+
+%%
+% calculate the difference in the priming frequency relative to MHW prequency between two periods
+diff = mk; % [W-E,N-S]
+diff(~isnan(diff))=0;
+cha_2856_fp=zeros(7200,1400);
+cha_2856_fmhw=zeros(7200,1400);
+
+for lat=1:1400
+  for lon=1:7200
+    if (~isnan(fp_2856_l(lon,lat))) 
+%            diff(lon,lat)=(fp_l(lon,lat)-fp_e(lon,lat))/(fp_l(lon,lat)+fp_e(lon,lat))*100;
+          cha_2856_fp(lon,lat)=fp_2856_l(lon,lat)-fp_2856_e(lon,lat);
+          cha_2856_fmhw(lon,lat)=fmmhw_2856_l(lon,lat)-fmmhw_2856_e(lon,lat);
+    end
+  end
+end
+
+
+cha_56_fp=zeros(7200,1400);
+cha_56_fmhw=zeros(7200,1400);
+for lat=1:1400
+  for lon=1:7200
+    if (~isnan(fp_56_l(lon,lat))) 
+%            diff(lon,lat)=(fp_l(lon,lat)-fp_e(lon,lat))/(fp_l(lon,lat)+fp_e(lon,lat))*100;
+          cha_56_fp(lon,lat)=fp_56_l(lon,lat)-fp_56_e(lon,lat);
+          cha_56_fmhw(lon,lat)=fmmhw_56_l(lon,lat)-fmmhw_56_e(lon,lat);
+    end
+  end
+end
+
+
+
+%%
+% modify data structure to make data centered on Pacific
+diff_freq_2856=ncread('/Users/lixinru/Desktop/PhD.UBC/RC3_predicitng coral bleaching with MHW characteristics/RC3/dynamics/diff_NprimingNmmhw_35S35N_DHD2856.nc','diff_freq_c749');
+diff_freq_56=ncread('/Users/lixinru/Desktop/PhD.UBC/RC3_predicitng coral bleaching with MHW characteristics/RC3/dynamics/diff_NprimingNmmhw_35S35N_DHD56.nc','diff_freq_c749');
+
+[LG,LT]=meshgrid(Long,Lat);
+data_diff_freq_2856=diff_freq_2856'; 
+data_diff_freq_56=diff_freq_56'; 
+data_cha_2856_fp=cha_2856_fp'; 
+data_cha_56_fp=cha_56_fp';
+data_cha_2856_fmhw=cha_2856_fmhw'; 
+data_cha_56_fmhw=cha_56_fmhw';
+
+ind=[3601:7200 1:3600]; % Move left side to right
+data_cp_diff_freq_2856=data_diff_freq_2856(:,ind);
+data_cp_diff_freq_56=data_diff_freq_56(:,ind);
+data_cp_cha_2856_fp=data_cha_2856_fp(:,ind);
+data_cp_cha_56_fp=data_cha_56_fp(:,ind);
+data_cp_cha_2856_fmhw=data_cha_2856_fmhw(:,ind);
+data_cp_cha_56_fmhw=data_cha_56_fmhw(:,ind);
+LG=LG(:,ind);
+
+LG(LG<0)=LG(LG<0)+360; %...and subtract 360 to some longitudes
+
+%%
+coral_mask=ncread('/Users/lixinru/Desktop/PhD.UBC/RC2_explore systematic erros in simulated MHW characteristics by climate models/dynamics//WCMC_reef_cells_1_Resample_0.05.nc','WCMC_reef_cells_1_Resample');
+coral_mask=coral_mask(:,1101:2500)';
+Lat_cm=ncread('/Users/lixinru/Desktop/PhD.UBC/RC2_explore systematic erros in simulated MHW characteristics by climate models/dynamics/WCMC_reef_cells_1_Resample_0.05.nc','lat');
+Lat_cm=Lat_cm(1101:2500);
+Long_cm=ncread('/Users/lixinru/Desktop/PhD.UBC/RC2_explore systematic erros in simulated MHW characteristics by climate models/dynamics/WCMC_reef_cells_1_Resample_0.05.nc','lon');
+
+% source of Figure S9
+% find coral cells with rat_diff_2856>0 && rat_diff_56<0
+cc_pp=data_cp_diff_freq_2856;
+coord=zeros(1400,2);
+
+a=0;
+b=0;
+for lon=1:7200
+  for lat=1:1400
+    if (coral_mask(lat,lon)==1)
+      if (data_cp_diff_freq_2856(lat,lon)>0 && data_cp_cha_56_fmhw(lat,lon)<=0 && data_cp_cha_2856_fmhw(lat,lon)<=0)  %diff_freq_56(lon,lat)<0.05 && diff_freq_56(lon,lat)>-0.05
+           a=a+1;
+           coord(a,2)=Long_cm(lon);
+           coord(a,1)=Lat_cm(lat);
+           cc_pp(lat,lon)=1;
+      else
+          b=b+1;
+          cc_pp(lat,lon)=-1;
+      end
+    end
+  end
+end
+
+
+T=array2table(coord,"VariableNames",["Lat","Lon"]);
+writetable(T,'/Users/lixinru/Desktop/PhD.UBC/RC3_predicitng coral bleaching with MHW characteristics/CoralCells_increasedPrimingM_decreasedNoMMHW_SMHW.xlsx');
+
+%% New version
+% plot map
+clc;                          % Clear command window.
+figure(4)
+% makes NaN values look like black by setting the AlphaData property of an image
+imAlpha=ones(size(cc_pp));  % create a matrix of tranparency in the same size as the data variable (data_cp)
+imAlpha(isnan(cc_pp))=0;    % set the grid cells of NaNs to be zero
+imagescn(LG,LT,cc_pp,'AlphaData',imAlpha) % the alpha data transparency values
+set(gca,'color',0*[1 1 1]);   % set the AlphaData property 
+
+% set up colorbar
+cmap = jet(34);
+cmap_a1 = [1,1,1];     % white
+cmap_a2 = [.7,.7,.7];  % grey
+%cmap_c=zeros(3,size(cmap,2));
+x=0;
+for n=9:-1:6
+      x=x+1;
+      cmap_c(x,:) = cmap(n,:);
+end
+cmap_b = cmap(28,:);
+cmap_c = cmap(4,:);
+%cmap_a(1,:) = [1,1,1];
+%cmap_b(15,:) = [1,1,1];
+cmap = [cmap_a2; cmap_a1; cmap_b];
+colormap(cmap);
+caxis([-1 1]);
+h = colorbar;
+set(h,'YTick',-1:1:1);
+ylabel(h,{''})  
+h.Label.FontSize = 14;
+
+% custom x,y axis
+xlabel('longitude (°)');
+ylabel('latitude (°)');
+ax = gca;                                 % get current axis               
+ax.XLim = [-35 35];                       % set x limits
+ax.XTick = [-30 -20 -10 0 10 20 30];      % define y ticks
+yticklabels({'30S','20S','10S','0','10N','20N','30N'})
+% ax.XLim = [90 240];                       % set x limits
+% ax.XTick = [90 120 150 180 210 240];      % define y ticks
+% xticklabels({'90E','120E','150E','180','150W','120W'})
+ax.XLim = [0 360];                       % set x limits
+ax.XTick = [0 30 60 90 120 150 180 210 240 270 300 330 360];      % define y ticks
+xticklabels({'0','30E','60E','90E','120E','150E','180','150W','120W','90W','60W','30W','0'})
+ax = gca;
+ax.FontSize = 14;
+hold off;
+
+
+
+
+%%
+
+Freq=ncread('/Users/lixinru/Desktop/PhD.UBC/RC3_predicitng coral bleaching with MHW characteristics/RC3/dynamics/frequency_35S35N_primingC749_DHD2856.nc','gridded_frequency');
+b=0;
+for lat=1:1400
+% find coral cells with rat_diff_2856>0 && rat_diff_56<0
+cc_pp=diff_freq_2856;
+coord=zeros(1400,2);
+
+a=0;
+for lon=1:7200
+  for lat=1:1400
+    if (diff_freq_2856(lon,lat)>0 && diff_freq_56(lon,lat)<=0)  %diff_freq_56(lon,lat)<0.05 && diff_freq_56(lon,lat)>-0.05
+           a=a+1;
+           coord(a,1)=Long_diff(lon);
+           coord(a,2)=Lat_diff(lat);
+           cc_pp(lon,lat)=1;
+    end
+  end
+end
+  for lon=1:7200
+    if (Freq(lon,lat)>0 & (~isnan(diff(lon,lat)>0))) 
+        b=b+1;
+    end
+  end
+end
+
+
+%%
+% Write netCDF file
+%-------------------------------------------------------------------
+% slope of annual mean sst change computed with the simple linear regression
+%-------------------------------------------------------------------
+
+ncnc= netcdf.create('/Users/lixinru/Desktop/PhD.UBC/RC3_predicitng coral bleaching with MHW characteristics/RC3/dynamics/diff_nSMHWN_35S35N.nc','NC_WRITE');
+
+
+latID=netcdf.defDim(ncnc,'latitude',1400);
+vltID=netcdf.defVar(ncnc,'latitude','float',latID);
+netcdf.putAtt(ncnc,vltID,'axis','Y');
+long_namet = 'latitude';
+netcdf.putAtt(ncnc,vltID,'long_name',long_namet);
+netcdf.putAtt(ncnc,vltID,'units','degrees');
+
+longID=netcdf.defDim(ncnc,'longitude',7200);
+vlgID=netcdf.defVar(ncnc,'longitude','float',longID);
+netcdf.putAtt(ncnc,vlgID,'axis','X');
+long_namet = 'longitude';
+netcdf.putAtt(ncnc,vlgID,'long_name',long_namet);
+netcdf.putAtt(ncnc,vlgID,'units','degrees');
+
+varname = 'diff_freq_c749';
+long_name = 'the changes in the perentage of the number of priming occurrences out of the number of severe MHW occurrences in the latter 18-year period (2003-2020) than the earlier 18-year period (year 1985-2002)';
+unit = '1';
+
+vmmmID=netcdf.defVar(ncnc,varname,'float',[longID,latID]); % we need to define axis of the field
+netcdf.putAtt(ncnc,vmmmID,'long_name',long_name); % Give it the long_name
+netcdf.putAtt(ncnc,vmmmID,'units',unit);          % The unit
+
+
+% end define mode
+netcdf.endDef(ncnc)
+% input data
+netcdf.putVar(ncnc,vmmmID,diff);
+netcdf.putVar(ncnc,vltID,Lat);
+netcdf.putVar(ncnc,vlgID,Long);
+netcdf.close(ncnc)
+
+
+

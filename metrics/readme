@@ -1,3 +1,2 @@
-This folder contains the Matlab codes for quantifying the druation and magnitude of priming condtions and MHWs. The MHW heat stress input (HS) can be downloaded from 
-https://coralreefwatch.noaa.gov/product/5km/index_5km_sst.php. The global coral mask can be found from https://doi.org/10.34892/t2wk-5t34  
-The warmwater coral bleaching database for filtering out heat stress is available at https://zenodo.org/records/6780843 
+This folder contains the Matlab codes for quantifying the druation and magnitude of priming condtions and MHWs. The source data for doining these calculations includes: 1) the MHW heat stress input (HS) can be downloaded from 
+https://coralreefwatch.noaa.gov/product/5km/index_5km_sst.php; 2) the global coral mask can be found from https://doi.org/10.34892/t2wk-5t34; 3) the warmwater coral bleaching database for filtering out heat stress is available at https://zenodo.org/records/6780843 
